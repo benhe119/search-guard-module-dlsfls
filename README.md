@@ -7,7 +7,7 @@ This module for [Search Guard](https://github.com/floragunncom/search-guard) add
 
 ## Downloads
 
-* [Elasticsearch 5.3.x and 5.4.x / DLSFLS module 5.3-6](http://search.maven.org/remotecontent?filepath=com/floragunn/dlic-search-guard-module-dlsfls/5.3-6/dlic-search-guard-module-dlsfls-5.3-6-jar-with-dependencies.jar)
+* [Elasticsearch 5.3.x/5.4.x/5.5.x / DLSFLS module 5.3-6](http://search.maven.org/remotecontent?filepath=com/floragunn/dlic-search-guard-module-dlsfls/5.3-6/dlic-search-guard-module-dlsfls-5.3-6-jar-with-dependencies.jar)
 
 * [Elasticsearch 5.1.x / DLSFLS module 5.2-6](http://search.maven.org/remotecontent?filepath=com/floragunn/dlic-search-guard-module-dlsfls/5.2-6/dlic-search-guard-module-dlsfls-5.2-6-jar-with-dependencies.jar)
 
