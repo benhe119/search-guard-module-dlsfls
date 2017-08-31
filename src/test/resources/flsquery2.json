@@ -48,9 +48,5 @@
    ],
    "script_fields":{
 
-   },
-   "fielddata_fields":[
-      "@timestamp",
-      "timestamp"
-   ]
+   }
 }

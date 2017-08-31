@@ -33,6 +33,7 @@ import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.FilterDirectoryReader;
 import org.apache.lucene.index.FilterLeafReader;
+import org.apache.lucene.index.LeafMetaData;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.PointValues;
@@ -45,7 +46,6 @@ import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.util.BitSetIterator;
 import org.apache.lucene.util.Bits;
@@ -58,6 +58,7 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 
+import com.floragunn.searchguard.support.WildcardMatcher;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 
@@ -230,10 +231,10 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
         protected DirectoryReader doWrapDirectoryReader(final DirectoryReader in) throws IOException {
             return new DlsFlsDirectoryReader(in, includes, dlsQuery);
         }
-
+        
         @Override
-        public Object getCoreCacheKey() {
-            return in.getCoreCacheKey();
+        public CacheHelper getReaderCacheHelper() {
+            return in.getReaderCacheHelper();
         }
     }
 
@@ -265,7 +266,27 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
         return flsFieldInfos;
     }
 
+    
+    
     @Override
+    public PointValues getPointValues(String field) throws IOException {
+        // TODO Auto-generated method stub
+        return super.getPointValues(field);
+    }
+
+    @Override
+    public Terms terms(String field) throws IOException {
+        // TODO Auto-generated method stub
+        return super.terms(field);
+    }
+
+    @Override
+    public LeafMetaData getMetaData() {
+        // TODO Auto-generated method stub
+        return super.getMetaData();
+    }
+
+    /*@Override
     public Fields fields() throws IOException {
         final Fields fields = in.fields();
         
@@ -303,7 +324,7 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
             }
 
         };
-    }
+    }*/
 
     private class FlsStoredFieldVisitor extends StoredFieldVisitor {
 
@@ -319,7 +340,7 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
 
             if (fieldInfo.name.equals("_source")) {
                 final BytesReference bytesRef = new BytesArray(value);
-                final Tuple<XContentType, Map<String, Object>> bytesRefTuple = XContentHelper.convertToMap(bytesRef, false);
+                final Tuple<XContentType, Map<String, Object>> bytesRefTuple = XContentHelper.convertToMap(bytesRef, false, XContentType.JSON);
                 Map<String, Object> filteredSource = bytesRefTuple.v2();
                 
                 if (!canOptimize) {
@@ -458,16 +479,6 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     }
 
     @Override
-    public Bits getDocsWithField(final String field) throws IOException {
-        return isFls(field) ? in.getDocsWithField(field) : null;
-    }
-
-    @Override
-    public Object getCoreCacheKey() {
-        return in.getCoreCacheKey();
-    }
-
-    @Override
     public Bits getLiveDocs() {
         
         if(dlsEnabled) {
@@ -491,19 +502,21 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     public LeafReader getDelegate() {
         return in;
     }
-
-    @Override
-    public PointValues getPointValues() {
-        return super.getPointValues();
-    }
-
+    
     @Override
     public int maxDoc() {
         return super.maxDoc();
     }
 
     @Override
-    public Sort getIndexSort() {
-        return super.getIndexSort();
+    public CacheHelper getCoreCacheHelper() {
+        // TODO Auto-generated method stub
+        return in.getCoreCacheHelper();
+    }
+
+    @Override
+    public CacheHelper getReaderCacheHelper() {
+        // TODO Auto-generated method stub
+        return in.getReaderCacheHelper();
     }
 }

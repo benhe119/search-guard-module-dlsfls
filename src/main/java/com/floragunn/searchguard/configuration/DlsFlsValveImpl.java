@@ -54,7 +54,7 @@ public class DlsFlsValveImpl implements DlsFlsRequestValve {
             }
             
             if(request instanceof BulkRequest) {
-                for(DocWriteRequest inner:((BulkRequest) request).requests()) {
+                for(DocWriteRequest<?> inner:((BulkRequest) request).requests()) {
                     if(inner instanceof UpdateRequest) {
                         listener.onFailure(new ElasticsearchSecurityException("Update is not supported when FLS is activated"));
                         return false;

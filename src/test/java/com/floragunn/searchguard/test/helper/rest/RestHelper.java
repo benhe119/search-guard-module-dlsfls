@@ -129,6 +129,7 @@ public class RestHelper {
 				}
 			}
 
+			uriRequest.addHeader("Content-Type","application/json");
 			HttpResponse res = new HttpResponse(httpClient.execute(uriRequest));
 			if(log.isTraceEnabled()) {
 			    log.trace(res.getBody());

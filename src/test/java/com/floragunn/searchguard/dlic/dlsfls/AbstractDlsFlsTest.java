@@ -22,7 +22,7 @@ import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.transport.Netty4Plugin;
 import org.junit.Assert;
@@ -70,7 +70,7 @@ public abstract class AbstractDlsFlsTest extends AbstractSGUnitTest {
         try (TransportClient tc = new TransportClientImpl(tcSettings, asCollection(SearchGuardPlugin.class, Netty4Plugin.class))) {
             log.debug("Start transport client to init");
 
-            tc.addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(ci.nodeHost, ci.nodePort)));
+            tc.addTransportAddress(new TransportAddress(new InetSocketAddress(ci.nodeHost, ci.nodePort)));
             Assert.assertEquals(ci.numNodes,
                     tc.admin().cluster().nodesInfo(new NodesInfoRequest()).actionGet().getNodes().size());
 

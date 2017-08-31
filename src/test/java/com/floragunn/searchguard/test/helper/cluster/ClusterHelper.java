@@ -30,14 +30,13 @@ import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.PluginAwareNode;
 import org.elasticsearch.transport.Netty4Plugin;
 
 import com.floragunn.searchguard.SearchGuardPlugin;
-import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin;
 import com.floragunn.searchguard.test.helper.cluster.ClusterConfiguration.NodeSettings;
 
 public class ClusterHelper {
@@ -128,17 +127,17 @@ public class ClusterHelper {
 			// TODO: can be optimized
 			for (NodeInfo nodeInfo: nodes) {
 				if (nodeInfo.getHttp() != null && nodeInfo.getHttp().address() != null) {
-					final InetSocketTransportAddress is = (InetSocketTransportAddress) nodeInfo.getHttp().address()
+					final TransportAddress is =  nodeInfo.getHttp().address()
 							.publishAddress();
 					clusterInfo.httpPort = is.getPort();
-					clusterInfo.httpHost = is.getHost();
+					clusterInfo.httpHost = is.getAddress();
 					clusterInfo.httpAdresses.add(is);
 				}
 
-				final InetSocketTransportAddress is = (InetSocketTransportAddress) nodeInfo.getTransport().getAddress()
+				final TransportAddress is = nodeInfo.getTransport().getAddress()
 						.publishAddress();
 				clusterInfo.nodePort = is.getPort();
-				clusterInfo.nodeHost = is.getHost();
+				clusterInfo.nodeHost = is.getAddress();
 			}
 		} catch (final ElasticsearchTimeoutException e) {
 			throw new IOException(
@@ -158,13 +157,13 @@ public class ClusterHelper {
 				.put("cluster.name", clustername)
 				.put("path.data", "data/data")
 				.put("path.logs", "data/logs")
-				.put("path.conf", "data/config")
+				//.put("path.conf", "data/config")
 				.put("node.max_local_storage_nodes", 3)
 				.put("http.enabled", true)
-				.put("cluster.routing.allocation.disk.watermark.high", "1mb")
-				.put("cluster.routing.allocation.disk.watermark.low", "1mb")
+				//.put("cluster.routing.allocation.disk.watermark.high", "1mb")
+				//.put("cluster.routing.allocation.disk.watermark.low", "1mb")
 				.put("http.cors.enabled", true)
-				.put("node.local", false)
+				//.put("node.local", false)
 				.put("path.home", ".");
 	}
 	// @formatter:on

@@ -21,8 +21,8 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.index.query.ParsedQuery;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryShardContext;
@@ -44,8 +44,8 @@ final class DlsQueryParser {
       dlsQueryBuilder.setMinimumNumberShouldMatch(1);
       
       for (final String unparsedDlsQuery : unparsedDlsQueries) {
-          XContentParser parser = XContentFactory.xContent(unparsedDlsQuery).createParser(namedXContentRegistry, unparsedDlsQuery);                
-          QueryBuilder qb = queryShardContext.newParseContext(parser).parseInnerQueryBuilder().get();
+          XContentParser parser = JsonXContent.jsonXContent.createParser(namedXContentRegistry, unparsedDlsQuery);                
+          QueryBuilder qb = queryShardContext.parseInnerQueryBuilder(parser);
           ParsedQuery parsedQuery = queryShardContext.toQuery(qb);
           dlsQueryBuilder.add(parsedQuery.query(), Occur.SHOULD);
       }
