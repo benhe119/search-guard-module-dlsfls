@@ -133,4 +133,30 @@ public class FlsTest extends AbstractDlsFlsTest{
         Assert.assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, (res = rh.executePostRequest("/deals/deals/0/_update?pretty", "{\"doc\": {\"zip\": \"98765000\"}}", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager_fls", "password")))).getStatusCode());
         Assert.assertTrue(res.getBody().contains("Update is not supported"));
     }
+    
+    @Test
+    public void testFlsScroll() throws Exception {
+        
+        setup();
+
+        HttpResponse res;
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals/_search?pretty&size=1&scroll=5m", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager_fls", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody().contains("\"total\" : 2,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        Assert.assertTrue(res.getBody().contains("cust"));
+        Assert.assertTrue(res.getBody().contains("zip"));
+        Assert.assertFalse(res.getBody().contains("amount"));
+        Assert.assertFalse(res.getBody().contains("secret"));
+        int start = res.getBody().indexOf("\"_scroll_id\" : ");
+        int end = res.getBody().indexOf("\",", start+20);
+        String scrollId = res.getBody().substring(start+16, end);        
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/_search/scroll?pretty","{\"scroll_id\":\""+scrollId+"\",\"scroll\": \"1m\"}", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager_fls", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody().contains("\"total\" : 2,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        Assert.assertTrue(res.getBody().contains("cust"));
+        Assert.assertFalse(res.getBody().contains("amount"));
+        Assert.assertFalse(res.getBody().contains("secret"));
+    }
 }

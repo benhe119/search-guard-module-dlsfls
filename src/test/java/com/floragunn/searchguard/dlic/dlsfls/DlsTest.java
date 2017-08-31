@@ -280,4 +280,26 @@ public class DlsTest extends AbstractDlsFlsTest{
         res = rh.executeGetRequest("/deals/deals/0?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")));
         Assert.assertTrue(res.getBody().contains("\"found\" : false"));
     }
+    
+    @Test
+    public void testDlsScroll() throws Exception {
+        
+        setup();
+        
+        HttpResponse res;
+      
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals/_search?pretty&size=1&scroll=5m", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody().contains("\"total\" : 1,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        int start = res.getBody().indexOf("\"_scroll_id\" : ");
+        int end = res.getBody().indexOf("\",", start+20);
+        String scrollId = res.getBody().substring(start+16, end);
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/_search/scroll?pretty","{\"scroll_id\":\""+scrollId+"\",\"scroll\": \"1m\"}", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody().contains("\"total\" : 1,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        start = res.getBody().indexOf("\"_scroll_id\" : ");
+        end = res.getBody().indexOf("\",", start+20);
+        scrollId = res.getBody().substring(start+16, end);
+    }
 }
