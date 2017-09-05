@@ -72,8 +72,8 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         printLicenseInfo();
     }
 
-    public SearchGuardFlsDlsIndexSearcherWrapper(final IndexService indexService, final Settings settings) {
-        super(indexService, settings);
+    public SearchGuardFlsDlsIndexSearcherWrapper(final IndexService indexService, final Settings settings, final AdminDNs adminDNs) {
+        super(indexService, settings, adminDNs);
         this.queryShardContext = indexService.newQueryShardContext(0, null, () -> 0L, null);
         this.namedXContentRegistry = indexService.xContentRegistry();
     }

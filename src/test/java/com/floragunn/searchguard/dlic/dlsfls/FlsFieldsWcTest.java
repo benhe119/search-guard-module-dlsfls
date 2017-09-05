@@ -17,7 +17,6 @@ package com.floragunn.searchguard.dlic.dlsfls;
 import java.io.IOException;
 
 import org.apache.http.HttpStatus;
-import org.apache.http.message.BasicHeader;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
@@ -70,12 +69,12 @@ public class FlsFieldsWcTest extends AbstractDlsFlsTest{
         String query = FileHelper.loadFile("flsquery.json");
         
         HttpResponse res;        
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, encodeBasicHeader("admin", "admin"))).getStatusCode());
         Assert.assertTrue(res.getBody().contains("secret"));
         Assert.assertTrue(res.getBody().contains("@timestamp"));
         Assert.assertTrue(res.getBody().contains("\"timestamp"));
         
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, new BasicHeader("Authorization", "Basic "+encodeBasicHeader("fls_fields_wc", "password")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, encodeBasicHeader("fls_fields_wc", "password"))).getStatusCode());
         Assert.assertFalse(res.getBody().contains("customer"));
         Assert.assertFalse(res.getBody().contains("secret"));
         Assert.assertFalse(res.getBody().contains("timestamp"));
@@ -89,12 +88,12 @@ public class FlsFieldsWcTest extends AbstractDlsFlsTest{
         String query = FileHelper.loadFile("flsquery2.json");
         
         HttpResponse res;        
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, encodeBasicHeader("admin", "admin"))).getStatusCode());
         Assert.assertTrue(res.getBody().contains("secret"));
         Assert.assertTrue(res.getBody().contains("@timestamp"));
         Assert.assertTrue(res.getBody().contains("\"timestamp"));
         
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, new BasicHeader("Authorization", "Basic "+encodeBasicHeader("fls_fields_wc", "password")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, encodeBasicHeader("fls_fields_wc", "password"))).getStatusCode());
         Assert.assertFalse(res.getBody().contains("customer"));
         Assert.assertFalse(res.getBody().contains("secret"));
         Assert.assertFalse(res.getBody().contains("timestamp"));

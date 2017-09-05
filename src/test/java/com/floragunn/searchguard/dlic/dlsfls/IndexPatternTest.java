@@ -15,7 +15,6 @@
 package com.floragunn.searchguard.dlic.dlsfls;
 
 import org.apache.http.HttpStatus;
-import org.apache.http.message.BasicHeader;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.transport.TransportClient;
@@ -59,7 +58,7 @@ public class IndexPatternTest extends AbstractDlsFlsTest{
 
         HttpResponse res;
 
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-2016/logs/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-2016/logs/_search?pretty", encodeBasicHeader("admin", "admin"))).getStatusCode());
         System.out.println(res.getBody());
         Assert.assertTrue(res.getBody().contains("\"total\" : 2,\n    \"max_"));
         Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
@@ -68,7 +67,7 @@ public class IndexPatternTest extends AbstractDlsFlsTest{
         Assert.assertTrue(res.getBody().contains("mymsg"));
         Assert.assertTrue(res.getBody().contains("msgid"));
         
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-2016/logs/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("logstash", "password")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-2016/logs/_search?pretty", encodeBasicHeader("logstash", "password"))).getStatusCode());
         System.out.println(res.getBody());
         Assert.assertTrue(res.getBody().contains("\"total\" : 1,\n    \"max_"));
         Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
@@ -85,7 +84,7 @@ public class IndexPatternTest extends AbstractDlsFlsTest{
 
         HttpResponse res;
 
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", encodeBasicHeader("admin", "admin"))).getStatusCode());
         System.out.println(res.getBody());
         Assert.assertTrue(res.getBody().contains("\"total\" : 4,\n    \"max_"));
         Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
@@ -94,7 +93,7 @@ public class IndexPatternTest extends AbstractDlsFlsTest{
         Assert.assertTrue(res.getBody().contains("mymsg"));
         Assert.assertTrue(res.getBody().contains("msgid"));
         
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("logstash", "password")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", encodeBasicHeader("logstash", "password"))).getStatusCode());
         System.out.println(res.getBody());
         Assert.assertTrue(res.getBody().contains("\"total\" : 2,\n    \"max_"));
         Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
@@ -111,7 +110,7 @@ public class IndexPatternTest extends AbstractDlsFlsTest{
 
         HttpResponse res;
 
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", encodeBasicHeader("admin", "admin"))).getStatusCode());
         System.out.println(res.getBody());
         Assert.assertTrue(res.getBody().contains("\"total\" : 4,\n    \"max_"));
         Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
@@ -120,7 +119,7 @@ public class IndexPatternTest extends AbstractDlsFlsTest{
         Assert.assertTrue(res.getBody().contains("mymsg"));
         Assert.assertTrue(res.getBody().contains("msgid"));
         
-        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("regex", "password")))).getStatusCode());
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/logstash-20*/logs/_search?pretty", encodeBasicHeader("regex", "password"))).getStatusCode());
         System.out.println(res.getBody());
         Assert.assertTrue(res.getBody().contains("\"total\" : 2,\n    \"max_"));
         Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
