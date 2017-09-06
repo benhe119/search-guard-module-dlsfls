@@ -52,14 +52,14 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         sb.append(System.lineSeparator());
         sb.append("See https://floragunn.com/searchguard-validate-license"+System.lineSeparator());
         sb.append("In case of any doubt mail to <sales@floragunn.com>"+System.lineSeparator());
-        sb.append("*****************************************************");
+        sb.append("*****************************************************"+System.lineSeparator());
         
         final String licenseInfo = sb.toString();
         
         if(!Boolean.getBoolean("sg.display_lic_none")) {
             
             if(!Boolean.getBoolean("sg.display_lic_only_stdout")) {
-                LogManager.getLogger(PrivilegesInterceptorImpl.class).warn(licenseInfo);
+                LogManager.getLogger(SearchGuardFlsDlsIndexSearcherWrapper.class).warn(licenseInfo);
                 System.err.println(licenseInfo);
             }
     
