@@ -73,6 +73,7 @@ public class FlsFieldsTest extends AbstractDlsFlsTest{
         Assert.assertTrue(res.getBody().contains("secret"));
         Assert.assertTrue(res.getBody().contains("@timestamp"));
         Assert.assertTrue(res.getBody().contains("\"timestamp"));
+        Assert.assertTrue(res.getBody().contains("numfield5"));
         
         Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query, encodeBasicHeader("fls_fields", "password"))).getStatusCode());
         Assert.assertFalse(res.getBody().contains("customer"));
