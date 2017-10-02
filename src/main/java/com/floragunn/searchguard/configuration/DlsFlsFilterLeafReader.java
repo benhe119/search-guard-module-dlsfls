@@ -266,65 +266,6 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
         return flsFieldInfos;
     }
 
-    
-    
-    @Override
-    public PointValues getPointValues(String field) throws IOException {
-        // TODO Auto-generated method stub
-        return super.getPointValues(field);
-    }
-
-    @Override
-    public Terms terms(String field) throws IOException {
-        // TODO Auto-generated method stub
-        return super.terms(field);
-    }
-
-    @Override
-    public LeafMetaData getMetaData() {
-        // TODO Auto-generated method stub
-        return super.getMetaData();
-    }
-
-    /*@Override
-    public Fields fields() throws IOException {
-        final Fields fields = in.fields();
-        
-        if(!flsEnabled) {
-            return fields;
-        }
-        
-        return new Fields() {
-
-            @Override
-            public Iterator<String> iterator() {
-                return Iterators.<String> filter(fields.iterator(), new Predicate<String>() {
-
-                    @Override
-                    public boolean apply(final String input) {
-                        return isFls(input);
-                    }
-                });
-            }
-
-            @Override
-            public Terms terms(final String field) throws IOException {
-
-                if (!isFls(field)) {
-                    return null;
-                }
-
-                return in.terms(field);
-
-            }
-
-            @Override
-            public int size() {
-                return flsFieldInfos.size();
-            }
-
-        };
-    }*/
 
     private class FlsStoredFieldVisitor extends StoredFieldVisitor {
 
@@ -477,6 +418,21 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     public NumericDocValues getNormValues(final String field) throws IOException {
         return isFls(field) ? in.getNormValues(field) : null;
     }
+    
+    @Override
+    public PointValues getPointValues(String field) throws IOException {
+        return isFls(field) ? in.getPointValues(field) : null;
+    }
+
+    @Override
+    public Terms terms(String field) throws IOException {
+        return isFls(field) ? in.terms(field) : null;
+    }
+
+    @Override
+    public LeafMetaData getMetaData() {
+        return in.getMetaData();
+    }
 
     @Override
     public Bits getLiveDocs() {
@@ -505,18 +461,16 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     
     @Override
     public int maxDoc() {
-        return super.maxDoc();
+        return in.maxDoc();
     }
 
     @Override
     public CacheHelper getCoreCacheHelper() {
-        // TODO Auto-generated method stub
         return in.getCoreCacheHelper();
     }
 
     @Override
     public CacheHelper getReaderCacheHelper() {
-        // TODO Auto-generated method stub
         return in.getReaderCacheHelper();
     }
 }
