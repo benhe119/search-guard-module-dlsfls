@@ -85,8 +85,8 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
         if (flsEnabled) {
 
             final FieldInfos infos = delegate.getFieldInfos();
-            this.includesSet = new HashSet<String>(includesExcludes.size());
-            this.excludesSet = new HashSet<String>(includesExcludes.size());
+            this.includesSet = new HashSet<>(includesExcludes.size());
+            this.excludesSet = new HashSet<>(includesExcludes.size());
 
             for (final String incExc : includesExcludes) {
                 if (canOptimize && (incExc.indexOf('.') > -1 || incExc.indexOf('*') > -1)) {
