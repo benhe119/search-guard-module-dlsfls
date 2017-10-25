@@ -37,7 +37,7 @@ import com.google.common.collect.Sets;
 public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearcherWrapper {
 
     private final QueryShardContext queryShardContext;
-    private final static Set<String> metaFields = Sets.union(Sets.newHashSet("_source", "_version"), 
+    private static final Set<String> metaFields = Sets.union(Sets.newHashSet("_source", "_version"), 
             Sets.newHashSet(MapperService.getAllMetaFields()));
     private final NamedXContentRegistry namedXContentRegistry;
 
@@ -93,7 +93,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         final String dlsEval = evalMap(queries, index.getName());
 
         if (flsEval != null) { 
-            flsFields = new HashSet<String>(metaFields);
+            flsFields = new HashSet<>(metaFields);
             flsFields.addAll(allowedFlsFields.get(flsEval));
         }
         
