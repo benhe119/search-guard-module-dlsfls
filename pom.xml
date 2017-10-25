@@ -15,12 +15,11 @@
         <version>6.1-beta4</version>
     </parent>
 
-    <groupId>com.floragunn</groupId>
     <artifactId>dlic-search-guard-module-dlsfls</artifactId>
     <version>6.x-HEAD-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Search Guard</name>
+    <name>Search Guard DLS/FLS</name>
     <description>Provide document level security and field level security for search guard and elasticsearch
     </description>
     <url>https://github.com/floragunncom/search-guard-module-dlsfls</url>
@@ -74,7 +73,7 @@
             <version>${elasticsearch.version}</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <!-- Only test scoped dependencies hereafter -->
 
         <dependency>
@@ -134,6 +133,19 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <!-- 
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <outputDirectory>${project.build.directory}</outputDirectory>
@@ -149,7 +161,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin> -->
         </plugins>
     </build>
 </project>
