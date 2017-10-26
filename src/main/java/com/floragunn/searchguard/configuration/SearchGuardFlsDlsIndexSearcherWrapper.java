@@ -85,9 +85,9 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         Set<String> unparsedDlsQueries = null;
         
         final Map<String, Set<String>> allowedFlsFields = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
-                ConfigConstants.SG_FLS_FIELDS);
+                ConfigConstants.SG_FLS_FIELDS_HEADER);
         final Map<String, Set<String>> queries = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
-                ConfigConstants.SG_DLS_QUERY);
+                ConfigConstants.SG_DLS_QUERY_HEADER);
 
         final String flsEval = evalMap(allowedFlsFields, index.getName());
         final String dlsEval = evalMap(queries, index.getName());
