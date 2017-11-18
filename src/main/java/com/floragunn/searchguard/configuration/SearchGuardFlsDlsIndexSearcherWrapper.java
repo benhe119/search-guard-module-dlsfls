@@ -69,7 +69,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
     }
 
     static {
-        printLicenseInfo();
+        //printLicenseInfo();
     }
 
     public SearchGuardFlsDlsIndexSearcherWrapper(final IndexService indexService, final Settings settings, final AdminDNs adminDNs) {
