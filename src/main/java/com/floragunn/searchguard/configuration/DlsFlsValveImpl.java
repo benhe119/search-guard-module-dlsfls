@@ -14,7 +14,9 @@
 
 package com.floragunn.searchguard.configuration;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.elasticsearch.ElasticsearchSecurityException;
@@ -29,6 +31,7 @@ import org.elasticsearch.common.util.concurrent.ThreadContext;
 
 import com.floragunn.searchguard.support.ConfigConstants;
 import com.floragunn.searchguard.support.HeaderHelper;
+import com.floragunn.searchguard.support.WildcardMatcher;
 
 public class DlsFlsValveImpl implements DlsFlsRequestValve {
 
@@ -42,6 +45,24 @@ public class DlsFlsValveImpl implements DlsFlsRequestValve {
         final Map<String,Set<String>> allowedFlsFields = (Map<String,Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext, ConfigConstants.SG_FLS_FIELDS_HEADER);
         final Map<String,Set<String>> queries = (Map<String,Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext, ConfigConstants.SG_DLS_QUERY_HEADER);     
 
+        if (allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
+            
+            String ri = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices_cur");
+            if(ri == null) {
+                ri = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices");
+            }
+            
+            if (ri != null) {
+                for (Iterator<Entry<String, Set<String>>> it = allowedFlsFields.entrySet().iterator(); it.hasNext();) {
+                    Entry<String, Set<String>> entry = it.next();
+                    if (!WildcardMatcher.matchAny(entry.getKey(), ri.split(","), false)) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+        
+        
         if(allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
             
             if(request instanceof RealtimeRequest) {
