@@ -47,21 +47,21 @@ public class DlsFlsValveImpl implements DlsFlsRequestValve {
 
         if (allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
             
-            String ri = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices_cur");
-            if(ri == null) {
-                ri = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices");
+            String resolvedIndices = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices_cur");
+            if(resolvedIndices == null || resolvedIndices.isEmpty()) {
+                resolvedIndices = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices");
             }
-            
-            if (ri != null) {
+
+            if (resolvedIndices != null && !resolvedIndices.isEmpty()) {
+                final String[] resolvedIndicesArray = resolvedIndices.split(",");
                 for (Iterator<Entry<String, Set<String>>> it = allowedFlsFields.entrySet().iterator(); it.hasNext();) {
                     Entry<String, Set<String>> entry = it.next();
-                    if (!WildcardMatcher.matchAny(entry.getKey(), ri.split(","), false)) {
+                    if (!WildcardMatcher.matchAny(entry.getKey(), resolvedIndicesArray, false)) {
                         it.remove();
                     }
                 }
             }
         }
-        
         
         if(allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
             
