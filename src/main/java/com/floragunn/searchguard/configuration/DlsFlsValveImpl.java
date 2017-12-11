@@ -14,9 +14,7 @@
 
 package com.floragunn.searchguard.configuration;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.elasticsearch.ElasticsearchSecurityException;
@@ -27,11 +25,6 @@ import org.elasticsearch.action.RealtimeRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.util.concurrent.ThreadContext;
-
-import com.floragunn.searchguard.support.ConfigConstants;
-import com.floragunn.searchguard.support.HeaderHelper;
-import com.floragunn.searchguard.support.WildcardMatcher;
 
 public class DlsFlsValveImpl implements DlsFlsRequestValve {
 
@@ -41,27 +34,7 @@ public class DlsFlsValveImpl implements DlsFlsRequestValve {
      * @param listener
      * @return false on error
      */
-    public boolean invoke(final ActionRequest request, final ActionListener<?> listener, ThreadContext threadContext) {
-        final Map<String,Set<String>> allowedFlsFields = (Map<String,Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext, ConfigConstants.SG_FLS_FIELDS_HEADER);
-        final Map<String,Set<String>> queries = (Map<String,Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext, ConfigConstants.SG_DLS_QUERY_HEADER);     
-
-        if (allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
-            
-            String resolvedIndices = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices_cur");
-            if(resolvedIndices == null || resolvedIndices.isEmpty()) {
-                resolvedIndices = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices");
-            }
-
-            if (resolvedIndices != null && !resolvedIndices.isEmpty()) {
-                final String[] resolvedIndicesArray = resolvedIndices.split(",");
-                for (Iterator<Entry<String, Set<String>>> it = allowedFlsFields.entrySet().iterator(); it.hasNext();) {
-                    Entry<String, Set<String>> entry = it.next();
-                    if (!WildcardMatcher.matchAny(entry.getKey(), resolvedIndicesArray, false)) {
-                        it.remove();
-                    }
-                }
-            }
-        }
+    public boolean invoke(final ActionRequest request, final ActionListener<?> listener, final Map<String,Set<String>> allowedFlsFields, final Map<String,Set<String>> queries) {
         
         if(allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
             

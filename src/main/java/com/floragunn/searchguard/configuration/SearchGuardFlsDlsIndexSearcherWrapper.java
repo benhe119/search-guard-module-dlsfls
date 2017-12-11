@@ -90,24 +90,6 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
                 ConfigConstants.SG_FLS_FIELDS_HEADER);
         final Map<String, Set<String>> queries = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
                 ConfigConstants.SG_DLS_QUERY_HEADER);
-        
-        if (allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
-            
-            String resolvedIndices = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices_cur");
-            if(resolvedIndices == null || resolvedIndices.isEmpty()) {
-                resolvedIndices = HeaderHelper.getSafeFromHeader(threadContext, "_sg_fls_resolved_indices");
-            }
-
-            if (resolvedIndices != null && !resolvedIndices.isEmpty()) {
-                final String[] resolvedIndicesArray = resolvedIndices.split(",");
-                for (Iterator<Entry<String, Set<String>>> it = allowedFlsFields.entrySet().iterator(); it.hasNext();) {
-                    Entry<String, Set<String>> entry = it.next();
-                    if (!WildcardMatcher.matchAny(entry.getKey(), resolvedIndicesArray, false)) {
-                        it.remove();
-                    }
-                }
-            }
-        }
 
         final String flsEval = evalMap(allowedFlsFields, index.getName());
         final String dlsEval = evalMap(queries, index.getName());

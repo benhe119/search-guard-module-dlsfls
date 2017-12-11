@@ -39,6 +39,12 @@ sg_deals_without_amount:
        _fls_:
          - 'customer.*'
          - zip
+    'finance':
+       '*':  
+         - '*'
+       _fls_:
+         - 'finfield1'
+         - 'finfield2'
         
 sg_dls_without_field_perm:
   cluster:
