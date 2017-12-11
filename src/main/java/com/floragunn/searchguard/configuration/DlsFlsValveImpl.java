@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 by floragunn UG (haftungsbeschränkt) - All rights reserved
+ * Copyright 2016-2017 by floragunn GmbH - All rights reserved
  * 
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -25,10 +25,6 @@ import org.elasticsearch.action.RealtimeRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.util.concurrent.ThreadContext;
-
-import com.floragunn.searchguard.support.ConfigConstants;
-import com.floragunn.searchguard.support.HeaderHelper;
 
 public class DlsFlsValveImpl implements DlsFlsRequestValve {
 
@@ -38,10 +34,8 @@ public class DlsFlsValveImpl implements DlsFlsRequestValve {
      * @param listener
      * @return false on error
      */
-    public boolean invoke(final ActionRequest request, final ActionListener listener, ThreadContext threadContext) {
-        final Map<String,Set<String>> allowedFlsFields = (Map<String,Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext, ConfigConstants.SG_FLS_FIELDS);
-        final Map<String,Set<String>> queries = (Map<String,Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext, ConfigConstants.SG_DLS_QUERY);     
-
+    public boolean invoke(final ActionRequest request, final ActionListener<?> listener, final Map<String,Set<String>> allowedFlsFields, final Map<String,Set<String>> queries) {
+        
         if(allowedFlsFields != null && !allowedFlsFields.isEmpty()) {
             
             if(request instanceof RealtimeRequest) {
@@ -54,7 +48,7 @@ public class DlsFlsValveImpl implements DlsFlsRequestValve {
             }
             
             if(request instanceof BulkRequest) {
-                for(DocWriteRequest inner:((BulkRequest) request).requests()) {
+                for(DocWriteRequest<?> inner:((BulkRequest) request).requests()) {
                     if(inner instanceof UpdateRequest) {
                         listener.onFailure(new ElasticsearchSecurityException("Update is not supported when FLS is activated"));
                         return false;
