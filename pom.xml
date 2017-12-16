@@ -35,8 +35,8 @@
   </distributionManagement>
 
   <properties>
-    <sg2.version>5.6.x-HEAD-SNAPSHOT</sg2.version>
-    <elasticsearch.version>5.6.0</elasticsearch.version>
+    <sg2.version>5.6.5-17</sg2.version>
+    <elasticsearch.version>5.6.5</elasticsearch.version>
     <dependency.locations.enabled>false</dependency.locations.enabled>
   </properties>
 
