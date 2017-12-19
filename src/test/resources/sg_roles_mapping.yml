@@ -52,8 +52,12 @@ sg_perf_wc_in:
     
 sg_perf_named_ex:
   users:
-    perf_named_ex
+    - perf_named_ex
     
 sg_perf_wc_ex:
   users:
-    perf_wc_ex
+    - perf_wc_ex
+    
+sg_human_resources_trainee:
+  users:
+    - human_resources_trainee

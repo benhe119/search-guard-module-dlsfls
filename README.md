@@ -5,29 +5,11 @@
 ## About this module
 This module for [Search Guard ](https://github.com/floragunncom/search-guard) adds Document- and Fieldlevel security.
 
-## Downloads
-
-**Choose the module version matching your Elasticsearch version, and download the jar with dependencies here:**
-
-https://github.com/floragunncom/search-guard-module-dlsfls/wiki
-
-## Installation
-
-Download the JWT module for your Elasticsearch versions and place it in the folder
-
-* `<ES installation directory>/plugins/search-guard-5`
-
-or
-
-* `<ES installation directory>/plugins/search-guard-2`
-
-After that, restart your nodes to activate the module.
-
 ## Documentation
 
 Please refer to the official Search Guard documentation for installation and configuration instructions:
 
-[DLS/FLS documentation](https://github.com/floragunncom/search-guard-docs/blob/master/dlsfls.md)
+[DLS/FLS documentation](http://docs.search-guard.com/latest/document-level-security)
 
 ## Commercial use
 This software is free of charge for non-commercial and academic use. For commercial use in a production environment you have to obtain a [license](https://floragunn.com/searchguard/searchguard-license-support/). 

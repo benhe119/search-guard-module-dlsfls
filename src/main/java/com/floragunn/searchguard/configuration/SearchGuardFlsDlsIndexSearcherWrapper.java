@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 by floragunn UG (haftungsbeschränkt) - All rights reserved
+ * Copyright 2016-2017 by floragunn GmbH - All rights reserved
  * 
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,7 +16,9 @@ package com.floragunn.searchguard.configuration;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
