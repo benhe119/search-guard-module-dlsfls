@@ -138,6 +138,46 @@ sg_regex:
        _dls_: '{"term" : {"msgid" : "12"}}'
        _fls_:
          - msgid
+         
+sg_aaa:
+  indices:
+    'aaa':
+      '*':
+        - '*'
+      _dls_: '{"term" : {"type" : "a"}}'
+      _fls_:
+        - f1
+        - f2
+        - type
+    'bbb':
+      '*':
+        - '*'
+      _dls_: '{"term" : {"type" : "b"}}'
+      _fls_:
+        - f2
+        - f3
+        - f4
+        - type
+        
+sg_bbb:
+  indices:
+    'aaa':
+      '*':
+        - '*'
+      _dls_: '{"term" : {"type" : "a"}}'
+      _fls_:
+        - f2
+        - f3
+        - f4
+        - type
+    'bbb':
+      '*':
+        - '*'
+      _dls_: '{"term" : {"type" : "b"}}'
+      _fls_:
+        - f1
+        - f2
+        - type
 
 sg_fls_fields_wc:
   cluster:

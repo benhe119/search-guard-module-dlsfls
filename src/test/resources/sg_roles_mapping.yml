@@ -61,3 +61,10 @@ sg_perf_wc_ex:
 sg_human_resources_trainee:
   users:
     - human_resources_trainee
+
+sg_aaa:
+  users:
+    - user_aaa
+sg_bbb:
+  users:
+    - user_bbb
