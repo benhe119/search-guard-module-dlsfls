@@ -110,7 +110,8 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
     @Override
     protected IndexSearcher dlsFlsWrap(final IndexSearcher searcher) throws EngineException {
 
-        if(searcher.getIndexReader().getClass() != DlsFlsFilterLeafReader.DlsFlsDirectoryReader.class) {
+        if(searcher.getIndexReader().getClass() != DlsFlsFilterLeafReader.DlsFlsDirectoryReader.class
+                && searcher.getIndexReader().getClass() != EmptyFilterLeafReader.EmptyDirectoryReader.class) {
             throw new RuntimeException("Unexpected index reader class "+searcher.getIndexReader().getClass());
         }
         
