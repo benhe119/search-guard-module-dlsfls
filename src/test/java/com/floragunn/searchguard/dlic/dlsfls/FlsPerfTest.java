@@ -15,6 +15,8 @@
 package com.floragunn.searchguard.dlic.dlsfls;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.http.HttpStatus;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -49,10 +51,13 @@ public class FlsPerfTest extends AbstractDlsFlsTest{
         tc.index(new IndexRequest("searchguard").type("sg").setRefreshPolicy(RefreshPolicy.IMMEDIATE).id("actiongroups")
                 .source("actiongroups", FileHelper.readYamlContent("sg_action_groups.yml"))).actionGet();
                         
+        Map<String, Object> indexSettings = new HashMap<>(3);
+        indexSettings.put("index.mapping.total_fields.limit",50000);
+        indexSettings.put("number_of_shards", 10);
+        indexSettings.put("number_of_replicas", 0);
+
         tc.admin().indices().create(new CreateIndexRequest("deals")
-        .settings("index.mapping.total_fields.limit",50000
-                , "number_of_shards", 10
-                ,"number_of_replicas", 0))
+        .settings(indexSettings))
         .actionGet();
         
         try {
