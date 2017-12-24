@@ -16,15 +16,14 @@ package com.floragunn.searchguard.configuration;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.index.IndexService;
 import org.elasticsearch.index.engine.EngineException;
@@ -33,7 +32,9 @@ import org.elasticsearch.index.query.QueryShardContext;
 
 import com.floragunn.searchguard.support.ConfigConstants;
 import com.floragunn.searchguard.support.HeaderHelper;
+import com.floragunn.searchguard.support.SerializationHelper;
 import com.floragunn.searchguard.support.WildcardMatcher;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearcherWrapper {
@@ -42,6 +43,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
     private static final Set<String> metaFields = Sets.union(Sets.newHashSet("_source", "_version"), 
             Sets.newHashSet(MapperService.getAllMetaFields()));
     private final NamedXContentRegistry namedXContentRegistry;
+    private final SerializationHelper serializationHelper;
 
     private static void printLicenseInfo() {
         final StringBuilder sb = new StringBuilder();
@@ -74,10 +76,13 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         //printLicenseInfo();
     }
 
-    public SearchGuardFlsDlsIndexSearcherWrapper(final IndexService indexService, final Settings settings, final AdminDNs adminDNs) {
+    public SearchGuardFlsDlsIndexSearcherWrapper(final IndexService indexService, final Settings settings, 
+            final AdminDNs adminDNs,
+            final SerializationHelper serializationHelper) {
         super(indexService, settings, adminDNs);
         this.queryShardContext = indexService.newQueryShardContext(0, null, () -> 0L, null);
         this.namedXContentRegistry = indexService.xContentRegistry();
+        this.serializationHelper = serializationHelper;
     }
 
     @Override
@@ -86,9 +91,9 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         Set<String> flsFields = null;
         Set<String> unparsedDlsQueries = null;
         
-        final Map<String, Set<String>> allowedFlsFields = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
+        final Map<String, Set<String>> allowedFlsFields = deserializeSafeFromHeader0(threadContext,
                 ConfigConstants.SG_FLS_FIELDS_HEADER);
-        final Map<String, Set<String>> queries = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
+        final Map<String, Set<String>> queries = deserializeSafeFromHeader0(threadContext,
                 ConfigConstants.SG_DLS_QUERY_HEADER);
 
         final String flsEval = evalMap(allowedFlsFields, index.getName());
@@ -118,7 +123,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         return searcher;
     }
         
-    private String evalMap(final Map<String,Set<String>> map, final String index) {
+    private String evalMap(final Map<String, Set<String>> map, final String index) {
 
         if (map == null) {
             return null;
@@ -143,4 +148,15 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
 
         return null;
     }
+    
+    private Map<String, Set<String>> deserializeSafeFromHeader0(final ThreadContext context, final String headerName) {
+
+        final String objectAsBase64 = HeaderHelper.getSafeFromHeader(context, headerName);
+    
+        if (!Strings.isNullOrEmpty(objectAsBase64)) {
+            return serializationHelper.deserializeMap(objectAsBase64);
+        }
+    
+        return null;
+    }    
 }
