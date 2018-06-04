@@ -20,18 +20,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.FilterDirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.BitSetProducer;
-import org.elasticsearch.common.lucene.index.ElasticsearchDirectoryReader;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.index.IndexService;
 import org.elasticsearch.index.cache.bitset.BitsetFilterCache;
 import org.elasticsearch.index.engine.EngineException;
 import org.elasticsearch.index.mapper.MapperService;
-import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.index.shard.ShardUtils;
 
@@ -40,7 +36,7 @@ import com.floragunn.searchguard.support.HeaderHelper;
 import com.google.common.collect.Sets;
 
 public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearcherWrapper {
-
+    
     private final static Set<String> metaFields = Sets.union(Sets.newHashSet("_source", "_version"), 
             Sets.newHashSet(MapperService.getAllMetaFields()));
     private final IndexService is;
@@ -54,7 +50,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         System.out.println("(+) Document-/Fieldlevel");
         System.out.println("***************************************************");
     }
-
+    
     static {
         printLicenseInfo();
     }
@@ -68,6 +64,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
     protected DirectoryReader dlsFlsWrap(final DirectoryReader reader) throws IOException {
 
         Set<String> flsFields = null;
+
         
         final Map<String, Set<String>> allowedFlsFields = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
                 ConfigConstants.SG_FLS_FIELDS);
@@ -89,8 +86,8 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
             if(unparsedDlsQueries != null && !unparsedDlsQueries.isEmpty()) {
                 final ShardId shardId = ShardUtils.extractShardId(reader);  
                 final BitsetFilterCache bsfc = is.cache().bitsetFilterCache();
-                //it also possible to put a 'null' value to newQueryShardContext for the index reader but that will disable some optimizations
-                final Query dlsQuery = DlsQueryParser.parse(unparsedDlsQueries, is.newQueryShardContext(shardId.getId(), reader, null), is.xContentRegistry());
+                //disable reader optimizations
+                final Query dlsQuery = DlsQueryParser.parse(unparsedDlsQueries, is.newQueryShardContext(shardId.getId(), null, null), is.xContentRegistry());
                 bsp = dlsQuery==null?null:bsfc.getBitSetProducer(dlsQuery);
             }
         }

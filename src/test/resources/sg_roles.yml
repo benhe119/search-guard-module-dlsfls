@@ -10,11 +10,11 @@ sg_midsized_deals:
   cluster:
     - '*'
   indices:
-    'deals':
-       '*':  
-         - READ
+    'deals*':
+      '*':  
+        - READ
        #_dls_: '{"term" : {"${user.name}" : "12"}}'
-       _dls_: | 
+      _dls_: | 
                  {
                    "range" : {
                       "amount" : {
@@ -23,7 +23,11 @@ sg_midsized_deals:
                       }
                     }
                  }
-                  
+    'deals1*':
+      '*':  
+        - READ
+       #_dls_: '{"term" : {"${user.name}" : "12"}}'
+      _dls_: "{\"bool\":{\"filter\":[{\"type\":{\"value\":\"dealstype\"}}]}}"         
        #_fls_:
        #  - fieldx
        #  - field2.b

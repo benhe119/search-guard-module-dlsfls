@@ -35,6 +35,7 @@ import org.apache.lucene.index.FilterDirectoryReader;
 import org.apache.lucene.index.FilterLeafReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.PointValues;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
@@ -45,6 +46,7 @@ import org.apache.lucene.search.join.BitSetProducer;
 import org.apache.lucene.util.BitSet;
 import org.apache.lucene.util.BitSetIterator;
 import org.apache.lucene.util.Bits;
+import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.collect.Tuple;
@@ -62,14 +64,14 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     private final Set<String> includesSet;
     private final Set<String> excludesSet;
     private final FieldInfos flsFieldInfos;
-    private Bits liveDocs;
-    private int numDocs;
+    private volatile int numDocs = -1;
     private final boolean flsEnabled;
     private final boolean dlsEnabled;
     private String[] includes;
     private String[] excludes;
     private boolean canOptimize = true;
     private Function<Map<String, ?>, Map<String, Object>> filterFunction;
+    private BitSet bs;
 
     DlsFlsFilterLeafReader(final LeafReader delegate, final Set<String> includesExcludes, final BitSetProducer bsp) {
         super(delegate);
@@ -153,99 +155,14 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
             this.flsFieldInfos = null;
         }
         
-        
         if(dlsEnabled) {
             try {
-                
-                
-                
-                /*
-                  
-                Use index cache to do this in a cached way (leverage bitsetproducer)
-                
-                 
-                //borrowed from Apache Lucene (Copyright Apache Software Foundation (ASF))
-                final IndexSearcher searcher = new IndexSearcher(this);
-                searcher.setQueryCache(null);
-                final boolean needsScores = false;
-                final Weight preserveWeight = searcher.createNormalizedWeight(dlsQuery, needsScores);
-                
-                final int maxDoc = in.maxDoc();
-                final FixedBitSet bits = new FixedBitSet(maxDoc);
-                final Scorer preverveScorer = preserveWeight.scorer(this.getContext());
-                if (preverveScorer != null) {
-                  bits.or(preverveScorer.iterator());
-                }
-
-                if (in.hasDeletions()) {
-                    final Bits oldLiveDocs = in.getLiveDocs();
-                    assert oldLiveDocs != null;
-                    final DocIdSetIterator it = new BitSetIterator(bits, 0L);
-                    for (int i = it.nextDoc(); i != DocIdSetIterator.NO_MORE_DOCS; i = it.nextDoc()) {
-                      if (!oldLiveDocs.get(i)) {
-                        bits.clear(i);
-                      }
-                    }
-                  }
-
-                  this.liveDocs = bits;
-                  this.numDocs = bits.cardinality();
-                  */
-                
-            	//get the possibly cached bitset for the dls query
-                final BitSet bs = bsp.getBitSet(this.getContext()); //we use 'this.' instead of 'in.' to keep fls effective
-
-                if(bs == null) { //no documents match
-                    this.liveDocs = new Bits.MatchNoBits(in.maxDoc());
-                    this.numDocs = 0;
-                    return;
-                }
-                
-                final Bits currentLiveDocs = in.getLiveDocs();
-                
-                if(currentLiveDocs == null) { //originally to all documents are live, so we return those matching the dls query
-                    this.liveDocs = bs;
-                    this.numDocs = bs.cardinality();
-                    return;
-                }
-                
-                
-                int localNumDocs = 0;
-                
-                DocIdSetIterator it = new BitSetIterator(bs, 0L);
-
-                //count the non deleted live docs
-                for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
-                    if (currentLiveDocs.get(doc)) {
-                        localNumDocs++;
-                    }
-                }
-                
-                this.numDocs = localNumDocs;
-
-                //originally not all documents were live (there are deleted ones), so we must 'AND' them with the dls query
-                this.liveDocs = new Bits() {
-
-                    @Override
-                    public boolean get(int index) {
-                        return bs.get(index) && currentLiveDocs.get(index);
-                    }
-
-                    @Override
-                    public int length() {
-                        return bs.length();
-                    }
-                    
-                };
-                
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                bs = bsp.getBitSet(this.getContext());
+            } catch (IOException e) {
+                throw ExceptionsHelper.convertToElastic(e);
             }
-
-        } else {
-            this.liveDocs = null;
-            this.numDocs = -1;
         }
+
     }
 
     private static class DlsFlsSubReaderWrapper extends FilterDirectoryReader.SubReaderWrapper {
@@ -521,24 +438,137 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     public Bits getLiveDocs() {
         
         if(dlsEnabled) {
-            return liveDocs;
+            final Bits currentLiveDocs = in.getLiveDocs();
+            
+            if(bs == null) {
+                return new Bits.MatchNoBits(in.maxDoc());
+            } else if (currentLiveDocs == null) {
+                return bs;
+            } else {
+
+                return new Bits() {
+
+                    @Override
+                    public boolean get(int index) {
+                        return bs.get(index) && currentLiveDocs.get(index);
+                    }
+
+                    @Override
+                    public int length() {
+                        return bs.length();
+                    }
+                    
+                };
+            
+            }
         }
         
-        return in.getLiveDocs();
+        return in.getLiveDocs(); //no dls
     }
 
     @Override
     public int numDocs() {
-        
-        if(dlsEnabled) {
-            return numDocs;
+
+        if (dlsEnabled) {
+            if (this.numDocs == -1) {
+                final Bits currentLiveDocs = in.getLiveDocs();
+
+                if (bs == null) {
+                    this.numDocs = 0;
+                } else if (currentLiveDocs == null) {
+                    this.numDocs = bs.cardinality();
+                } else {
+
+                    try {
+                        int localNumDocs = 0;
+
+                        DocIdSetIterator it = new BitSetIterator(bs, 0L);
+
+                        for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
+                            if (currentLiveDocs.get(doc)) {
+                                localNumDocs++;
+                            }
+                        }
+
+                        this.numDocs = localNumDocs;
+                    } catch (IOException e) {
+                        throw ExceptionsHelper.convertToElastic(e);
+                    }
+                }
+
+                return this.numDocs;
+
+            } else {
+                return this.numDocs; // cached
+            }
         }
-        
+
         return in.numDocs();
     }
 
-    @Override
+    /*@Override
     public LeafReader getDelegate() {
         return in;
+    }*/
+
+    @Override
+    public PointValues getPointValues() {
+        final PointValues orig = super.getPointValues();
+        if(orig == null) {
+            return null;
+        }
+        
+        return new PointValues() {
+
+            @Override
+            public void intersect(String fieldName, IntersectVisitor visitor) throws IOException {
+                if(isFls(fieldName)){
+                    orig.intersect(fieldName, visitor);
+                }
+            }
+
+            @Override
+            public long estimatePointCount(String fieldName, IntersectVisitor visitor) {
+                return isFls(fieldName)?orig.estimatePointCount(fieldName, visitor):0L;
+            }
+
+            @Override
+            public byte[] getMinPackedValue(String fieldName) throws IOException {
+                return isFls(fieldName)?orig.getMinPackedValue(fieldName):null;
+            }
+
+            @Override
+            public byte[] getMaxPackedValue(String fieldName) throws IOException {
+                return isFls(fieldName)?orig.getMaxPackedValue(fieldName):null;
+            }
+
+            @Override
+            public int getNumDimensions(String fieldName) throws IOException {
+                return isFls(fieldName)?orig.getNumDimensions(fieldName):0;
+            }
+
+            @Override
+            public int getBytesPerDimension(String fieldName) throws IOException {
+                return isFls(fieldName)?orig.getBytesPerDimension(fieldName):0;
+            }
+
+            @Override
+            public long size(String fieldName) {
+                return isFls(fieldName)?orig.size(fieldName):0L;
+
+            }
+
+            @Override
+            public int getDocCount(String fieldName) {
+                return isFls(fieldName)?orig.getDocCount(fieldName):0;
+
+            }
+            
+        };
+    }
+
+    @Override
+    public boolean hasDeletions() {
+        return true;
     }
 }
