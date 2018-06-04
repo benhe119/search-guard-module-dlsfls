@@ -35,21 +35,16 @@ import org.apache.lucene.index.FilterDirectoryReader;
 import org.apache.lucene.index.FilterLeafReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.NumericDocValues;
-import org.apache.lucene.index.PointValues;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.DocIdSetIterator;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.join.BitSetProducer;
+import org.apache.lucene.util.BitSet;
 import org.apache.lucene.util.BitSetIterator;
 import org.apache.lucene.util.Bits;
-import org.apache.lucene.util.FixedBitSet;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.collect.Tuple;
@@ -67,8 +62,8 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     private final Set<String> includesSet;
     private final Set<String> excludesSet;
     private final FieldInfos flsFieldInfos;
-    private final Bits liveDocs;
-    private final int numDocs;
+    private Bits liveDocs;
+    private int numDocs;
     private final boolean flsEnabled;
     private final boolean dlsEnabled;
     private String[] includes;
@@ -76,10 +71,10 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     private boolean canOptimize = true;
     private Function<Map<String, ?>, Map<String, Object>> filterFunction;
 
-    DlsFlsFilterLeafReader(final LeafReader delegate, final Set<String> includesExcludes, final Query dlsQuery) {
+    DlsFlsFilterLeafReader(final LeafReader delegate, final Set<String> includesExcludes, final BitSetProducer bsp) {
         super(delegate);
         flsEnabled = includesExcludes != null && !includesExcludes.isEmpty();
-        dlsEnabled = dlsQuery != null;
+        dlsEnabled = bsp != null;
         
         if (flsEnabled) {
 
@@ -162,6 +157,13 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
         if(dlsEnabled) {
             try {
                 
+                
+                
+                /*
+                  
+                Use index cache to do this in a cached way (leverage bitsetproducer)
+                
+                 
                 //borrowed from Apache Lucene (Copyright Apache Software Foundation (ASF))
                 final IndexSearcher searcher = new IndexSearcher(this);
                 searcher.setQueryCache(null);
@@ -188,10 +190,58 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
 
                   this.liveDocs = bits;
                   this.numDocs = bits.cardinality();
+                  */
+                
+            	//get the possibly cached bitset for the dls query
+                final BitSet bs = bsp.getBitSet(this.getContext()); //we use 'this.' instead of 'in.' to keep fls effective
+
+                if(bs == null) { //no documents match
+                    this.liveDocs = new Bits.MatchNoBits(in.maxDoc());
+                    this.numDocs = 0;
+                    return;
+                }
+                
+                final Bits currentLiveDocs = in.getLiveDocs();
+                
+                if(currentLiveDocs == null) { //originally to all documents are live, so we return those matching the dls query
+                    this.liveDocs = bs;
+                    this.numDocs = bs.cardinality();
+                    return;
+                }
+                
+                
+                int localNumDocs = 0;
+                
+                DocIdSetIterator it = new BitSetIterator(bs, 0L);
+
+                //count the non deleted live docs
+                for (int doc = it.nextDoc(); doc != DocIdSetIterator.NO_MORE_DOCS; doc = it.nextDoc()) {
+                    if (currentLiveDocs.get(doc)) {
+                        localNumDocs++;
+                    }
+                }
+                
+                this.numDocs = localNumDocs;
+
+                //originally not all documents were live (there are deleted ones), so we must 'AND' them with the dls query
+                this.liveDocs = new Bits() {
+
+                    @Override
+                    public boolean get(int index) {
+                        return bs.get(index) && currentLiveDocs.get(index);
+                    }
+
+                    @Override
+                    public int length() {
+                        return bs.length();
+                    }
+                    
+                };
                 
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+
         } else {
             this.liveDocs = null;
             this.numDocs = -1;
@@ -201,16 +251,16 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     private static class DlsFlsSubReaderWrapper extends FilterDirectoryReader.SubReaderWrapper {
 
         private final Set<String> includes;
-        private final Query dlsQuery;
+        private final BitSetProducer bsp;
 
-        public DlsFlsSubReaderWrapper(final Set<String> includes, final Query dlsQuery) {
+        public DlsFlsSubReaderWrapper(final Set<String> includes, final BitSetProducer bsp) {
             this.includes = includes;
-            this.dlsQuery = dlsQuery;
+            this.bsp = bsp;
         }
 
         @Override
         public LeafReader wrap(final LeafReader reader) {
-            return new DlsFlsFilterLeafReader(reader, includes, dlsQuery);
+            return new DlsFlsFilterLeafReader(reader, includes, bsp);
         }
 
     }
@@ -218,17 +268,17 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     static class DlsFlsDirectoryReader extends FilterDirectoryReader {
 
         private final Set<String> includes;
-        private final Query dlsQuery;
+        private final BitSetProducer bsp;
 
-        public DlsFlsDirectoryReader(final DirectoryReader in, final Set<String> includes, final Query dlsQuery) throws IOException {
-            super(in, new DlsFlsSubReaderWrapper(includes, dlsQuery));
+        public DlsFlsDirectoryReader(final DirectoryReader in, final Set<String> includes, final BitSetProducer bsp) throws IOException {
+            super(in, new DlsFlsSubReaderWrapper(includes, bsp));
             this.includes = includes;
-            this.dlsQuery = dlsQuery;
+            this.bsp = bsp;
         }
 
         @Override
         protected DirectoryReader doWrapDirectoryReader(final DirectoryReader in) throws IOException {
-            return new DlsFlsDirectoryReader(in, includes, dlsQuery);
+            return new DlsFlsDirectoryReader(in, includes, bsp);
         }
 
         @Override
@@ -490,20 +540,5 @@ class DlsFlsFilterLeafReader extends FilterLeafReader {
     @Override
     public LeafReader getDelegate() {
         return in;
-    }
-
-    @Override
-    public PointValues getPointValues() {
-        return super.getPointValues();
-    }
-
-    @Override
-    public int maxDoc() {
-        return super.maxDoc();
-    }
-
-    @Override
-    public Sort getIndexSort() {
-        return super.getIndexSort();
     }
 }

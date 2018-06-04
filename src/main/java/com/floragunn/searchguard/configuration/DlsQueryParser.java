@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.Query;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -50,7 +51,9 @@ final class DlsQueryParser {
           dlsQueryBuilder.add(parsedQuery.query(), Occur.SHOULD);
       }
 
-      return dlsQueryBuilder.build();
+      //no need for scoring here, so its possible to wrap this in a ConstantScoreQuery
+      return new ConstantScoreQuery(dlsQueryBuilder.build());
+
   }
     
 }
