@@ -16,9 +16,14 @@ package com.floragunn.searchguard.dlic.dlsfls;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.message.BasicHeader;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.IndexModule;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,10 +46,57 @@ public class DlsTest extends AbstractDlsFlsTest{
         tc.index(new IndexRequest("searchguard").type("actiongroups").setRefreshPolicy(RefreshPolicy.IMMEDIATE).id("0")
                 .source("actiongroups", FileHelper.readYamlContent("sg_action_groups.yml"))).actionGet();
         
+        tc.admin().indices().create(new CreateIndexRequest("deals",indexSettings())).actionGet();
+        tc.admin().indices().create(new CreateIndexRequest("deals1",indexSettings())).actionGet();
+        tc.admin().indices().create(new CreateIndexRequest("deals12",indexSettings())).actionGet();
+        
         tc.index(new IndexRequest("deals").type("deals").id("0").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
                 .source("{\"amount\": 10}")).actionGet();
         tc.index(new IndexRequest("deals").type("deals").id("1").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
                 .source("{\"amount\": 1500}")).actionGet();
+        
+        tc.index(new IndexRequest("deals").type("deals").id("2").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();
+        tc.delete(new DeleteRequest("deals", "deals", "2").setRefreshPolicy(RefreshPolicy.IMMEDIATE)).actionGet();
+        
+        
+        tc.index(new IndexRequest("deals1").type("dealstype").id("0").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 10}")).actionGet();
+        tc.index(new IndexRequest("deals1").type("dealstype").id("1").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();    
+        tc.index(new IndexRequest("deals1").type("dealstype2").id("2").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 10}")).actionGet();
+        tc.index(new IndexRequest("deals1").type("dealstype2").id("3").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();
+        
+        tc.index(new IndexRequest("deals1").type("dealstype2").id("4").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();
+        tc.delete(new DeleteRequest("deals1", "dealstype2", "4").setRefreshPolicy(RefreshPolicy.IMMEDIATE)).actionGet();
+       
+        
+        
+        tc.index(new IndexRequest("deals12").type("dealstype").id("0").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 10}")).actionGet();
+        tc.index(new IndexRequest("deals12").type("dealstype").id("1").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();       
+        tc.index(new IndexRequest("deals12").type("dealstype2").id("2").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 10}")).actionGet();
+        tc.index(new IndexRequest("deals12").type("dealstype2").id("3").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();
+        
+        
+        tc.index(new IndexRequest("deals12").type("dealstype2").id("4").setRefreshPolicy(RefreshPolicy.IMMEDIATE)
+                .source("{\"amount\": 1500}")).actionGet();
+        tc.delete(new DeleteRequest("deals12", "dealstype2", "4").setRefreshPolicy(RefreshPolicy.IMMEDIATE)).actionGet();
+       
+    }
+    
+    public Settings indexSettings() {
+        Settings.Builder builder =  Settings.builder()
+            .put(IndexModule.INDEX_QUERY_CACHE_ENABLED_SETTING.getKey(), true)
+            .put(IndexModule.INDEX_QUERY_CACHE_EVERYTHING_SETTING.getKey(), true);
+
+        return builder.build();
     }
     
     @Test
@@ -88,6 +140,40 @@ public class DlsTest extends AbstractDlsFlsTest{
     }
     
     @Test
+    public void testDlsMultipleIndices() throws Exception {
+        
+        setup();
+        
+        HttpResponse res;
+      
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals*/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertTrue(res.getBody(),res.getBody().contains("\"total\" : 10,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals*/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody(),res.getBody().contains("\"total\" : 7,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals1*/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody(),res.getBody().contains("\"total\" : 6,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        
+        //cache
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals*/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("admin", "admin")))).getStatusCode());
+        Assert.assertTrue(res.getBody(),res.getBody().contains("\"total\" : 10,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals*/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody(),res.getBody().contains("\"total\" : 7,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executeGetRequest("/deals1*/_search?pretty", new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody(),res.getBody().contains("\"total\" : 6,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
+
+    }
+    
+    @Test
     public void testDls() throws Exception {
         
         setup();
@@ -125,6 +211,10 @@ public class DlsTest extends AbstractDlsFlsTest{
                 "}"+
             "}";
         
+        
+        Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query,new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
+        Assert.assertTrue(res.getBody().contains("\"total\" : 0,\n    \"max_"));
+        Assert.assertTrue(res.getBody().contains("\"failed\" : 0"));
         
         Assert.assertEquals(HttpStatus.SC_OK, (res = rh.executePostRequest("/deals/_search?pretty", query,new BasicHeader("Authorization", "Basic "+encodeBasicHeader("dept_manager", "password")))).getStatusCode());
         Assert.assertTrue(res.getBody().contains("\"total\" : 0,\n    \"max_"));

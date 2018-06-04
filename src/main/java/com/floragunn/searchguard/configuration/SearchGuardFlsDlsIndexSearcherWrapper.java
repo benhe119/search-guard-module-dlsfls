@@ -36,10 +36,10 @@ import com.floragunn.searchguard.support.HeaderHelper;
 import com.google.common.collect.Sets;
 
 public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearcherWrapper {
-
+    
     private final static Set<String> metaFields = Sets.union(Sets.newHashSet("_source", "_version"), 
             Sets.newHashSet(MapperService.getAllMetaFields()));
-    private final IndexService is;;
+    private final IndexService is;
 
     public static void printLicenseInfo() {
         System.out.println("***************************************************");
@@ -50,7 +50,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
         System.out.println("(+) Document-/Fieldlevel");
         System.out.println("***************************************************");
     }
-
+    
     static {
         printLicenseInfo();
     }
@@ -86,8 +86,8 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
             if(unparsedDlsQueries != null && !unparsedDlsQueries.isEmpty()) {
                 final ShardId shardId = ShardUtils.extractShardId(reader);  
                 final BitsetFilterCache bsfc = is.cache().bitsetFilterCache();
-                //it also possible to put a 'null' value to newQueryShardContext for the index reader but that will disable some optimizations
-                final Query dlsQuery = DlsQueryParser.parse(unparsedDlsQueries, is.newQueryShardContext(shardId.getId(), reader, null), is.xContentRegistry());
+                //disable reader optimizations
+                final Query dlsQuery = DlsQueryParser.parse(unparsedDlsQueries, is.newQueryShardContext(shardId.getId(), null, null), is.xContentRegistry());
                 bsp = dlsQuery==null?null:bsfc.getBitSetProducer(dlsQuery);
             }
         }     

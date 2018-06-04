@@ -1,0 +1,26 @@
+sg_midsized_deals:
+  cluster:
+    - '*'
+  indices:
+    'deals0':
+      '*':  
+        - READ
+      _dls_: "{\"bool\":{\"filter\":[{\"type\":{\"value\":\"won\"}}]}}"
+    'deals1':
+      '*':  
+        - READ
+      _dls_: "{\"bool\":{\"filter\":[{\"type\":{\"value\":\"won\"}}]}}"
+    'deals*':
+      '*':  
+        - READ
+      _dls_: "{\"bool\":{\"filter\":[{\"type\":{\"value\":\"undecided\"}}]}}"
+
+      
+sg_all_access:
+  cluster:
+    - '*'
+  indices:
+    '*':
+      '*':  
+        - '*'
+      
