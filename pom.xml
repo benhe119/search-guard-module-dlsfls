@@ -15,7 +15,7 @@
 
   <groupId>com.floragunn</groupId>
   <artifactId>dlic-search-guard-module-dlsfls</artifactId>
-  <version>5.3-6p3-SNAPSHOT</version>
+  <version>5.3-6b-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Search Guard</name>
