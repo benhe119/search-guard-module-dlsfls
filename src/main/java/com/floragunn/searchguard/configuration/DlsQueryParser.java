@@ -20,6 +20,7 @@ import java.util.Set;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
@@ -73,7 +74,8 @@ final class DlsQueryParser {
           }  
       }
 
-      return dlsQueryBuilder.build();
+      //no need for scoring here, so its possible to wrap this in a ConstantScoreQuery
+      return new ConstantScoreQuery(dlsQueryBuilder.build());
   }
   
   private static void handleNested(final QueryShardContext queryShardContext, 
