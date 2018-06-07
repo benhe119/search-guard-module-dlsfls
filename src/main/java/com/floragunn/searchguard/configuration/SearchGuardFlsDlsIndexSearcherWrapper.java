@@ -64,7 +64,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
     protected DirectoryReader dlsFlsWrap(final DirectoryReader reader) throws IOException {
 
         Set<String> flsFields = null;
-
+        
         
         final Map<String, Set<String>> allowedFlsFields = (Map<String, Set<String>>) HeaderHelper.deserializeSafeFromHeader(threadContext,
                 ConfigConstants.SG_FLS_FIELDS);
@@ -90,7 +90,7 @@ public class SearchGuardFlsDlsIndexSearcherWrapper extends SearchGuardIndexSearc
                 final Query dlsQuery = DlsQueryParser.parse(unparsedDlsQueries, is.newQueryShardContext(shardId.getId(), null, null), is.xContentRegistry());
                 bsp = dlsQuery==null?null:bsfc.getBitSetProducer(dlsQuery);
             }
-        }
+        }     
         
         return new DlsFlsFilterLeafReader.DlsFlsDirectoryReader(reader, flsFields, bsp);
     }
